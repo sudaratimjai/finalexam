@@ -1,11 +1,9 @@
 package customer
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -49,14 +47,8 @@ func NewRouter() *gin.Engine {
 
 func insertCustomerHandler(c *gin.Context) {
 
-	_, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("Conect to database error", err)
-		return
-	}
-
 	var item Customer
-	err = c.ShouldBindJSON(&item)
+	err := c.ShouldBindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
 		return
@@ -127,13 +119,20 @@ func getAllCustomerHandler(c *gin.Context) {
 func updateCustomerHandler(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
+	var item Customer
+	err := c.ShouldBindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
 	stmt, err := database.UpdateCustomer()
 	if err != nil {
 		log.Fatal("can't update customer", err)
 		return
 	}
 
-	if _, err := stmt.Exec(id, "nong", "nong@imail.com", "inactive"); err != nil {
+	if _, err := stmt.Exec(id, item.Name, item.Email, item.Status); err != nil {
 		log.Fatal("error execute update", err)
 		return
 	}
